@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details - CampusConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .event-detail-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .event-header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .event-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+        
+        .event-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+        
+        .meta-icon {
+            font-size: 2rem;
+        }
+        
+        .organizer-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .registration-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            position: sticky;
+            top: 100px;
+            box-shadow: var(--shadow);
+        }
+        
+        .price-tag {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+        
+        .register-big-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        
+        .register-big-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .participants-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+    <div class="logo" onclick="window.location.href='index.html'">
+        🚀 CampusConnect
+    </div>
+    <div class="nav-links">
+        <a href="#" onclick="loadPage('index.html'); return false;">Home</a>
+        <a href="#" onclick="loadPage('events.html'); return false;">Events</a>
+        <a href="#" onclick="loadPage('internships.html'); return false;">Internships</a>
+        <a href="#" onclick="loadPage('organizer.html'); return false;">For Organizers</a>
+        <div id="authButtons">
+            <button class="btn btn-primary" onclick="showModal('loginModal')">Sign In</button>
+            <button class="btn btn-outline" onclick="showModal('registerModal')">Join Free</button>
+        </div>
+        <div id="userMenu" style="display: none;">
+            <!-- User menu will be populated by JS -->
+        </div>
+    </div>
+</nav>
+
+    <div class="event-detail-container" id="eventDetail">
+        <div class="loading">Loading event details...</div>
+    </div>
+    <div class="organizer-contact" style="margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 10px;">
+    <h4>Contact Organizer:</h4>
+    <p>📧 ${event.organizer?.email}</p>
+    <p>📞 ${event.organizer?.phone || 'Contact via email'}</p>
+</div>
+
+
+
+    <!-- Modals -->
+    <!-- ... login/register modals ... -->
+
+  <script src="js/data-store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/email-templates.js"></script>
+<script src="js/email-service.js"></script>
+<script>
+    // Get event ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('id');
+    console.log('Loading event ID:', eventId);
+
+    function loadEventDetails() {
+        const container = document.getElementById('eventDetail');
+        
+        if (!container) {
+            console.error('EventDetail container not found');
+            return;
+        }
+        
+        if (!eventId) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 100px; background: white; border-radius: 20px;">
+                    <h2>❌ Event Not Found</h2>
+                    <p style="margin: 20px 0; color: var(--gray);">No event ID provided</p>
+                    <button class="btn btn-primary" onclick="window.location.href='events.html'">Browse Events</button>
+                </div>
+            `;
+            return;
+        }
+        
+        try {
+            // Get event from store
+            const allEvents = eventStore.getAllEvents();
+            console.log('All events:', allEvents);
+            
+            const event = allEvents.find(e => e && e.id === eventId);
+            console.log('Found event:', event);
+            
+            if (!event) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 100px; background: white; border-radius: 20px;">
+                        <h2>❌ Event Not Found</h2>
+                        <p style="margin: 20px 0; color: var(--gray);">The event you're looking for doesn't exist</p>
+                        <button class="btn btn-primary" onclick="window.location.href='events.html'">Browse Events</button>
+                    </div>
+                `;
+                return;
+            }
+
+            displayEventDetails(event);
+            
+        } catch (error) {
+            console.error('Error loading event:', error);
+            container.innerHTML = `
+                <div style="text-align: center; padding: 100px; background: white; border-radius: 20px;">
+                    <h2>❌ Error Loading Event</h2>
+                    <p style="margin: 20px 0; color: var(--gray);">Please try again later</p>
+                    <button class="btn btn-primary" onclick="window.location.href='events.html'">Browse Events</button>
+                </div>
+            `;
+        }
+    }
+
+    function displayEventDetails(event) {
+        const container = document.getElementById('eventDetail');
+        
+        // Format date
+        const eventDate = event.date ? new Date(event.date).toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        }) : 'TBD';
+        
+        // Calculate registration percentage
+        const registeredPercent = Math.round((event.registeredCount || 0) / (event.maxRegistrations || 100) * 100);
+        
+        // Format team size
+        const teamSizeText = event.teamSize ? 
+            `${event.teamSize.min || 1}-${event.teamSize.max || 4} members` : 
+            '1-4 members';
+        
+        // Format fee
+        const feeText = event.fee === 0 || event.fee === '0' ? 'Free' : `₹${event.fee}`;
+        
+        container.innerHTML = `
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+                <div>
+                    <div class="event-header" style="background: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: var(--shadow);">
+                        <span class="event-type">${(event.type || 'EVENT').toUpperCase()}</span>
+                        <h1 class="event-title" style="font-size: 2rem; margin: 15px 0;">${event.title || 'Untitled Event'}</h1>
+                        <p style="color: var(--gray); line-height: 1.8;">${event.description || 'No description available'}</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0;">
+                            <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8fafc; border-radius: 10px;">
+                                <span style="font-size: 2rem;">📅</span>
+                                <div>
+                                    <strong>Date & Time</strong>
+                                    <p>${eventDate} ${event.time ? 'at ' + event.time : ''}</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8fafc; border-radius: 10px;">
+                                <span style="font-size: 2rem;">📍</span>
+                                <div>
+                                    <strong>Location</strong>
+                                    <p>${event.venue || event.location || 'TBD'}</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8fafc; border-radius: 10px;">
+                                <span style="font-size: 2rem;">👥</span>
+                                <div>
+                                    <strong>Team Size</strong>
+                                    <p>${teamSizeText}</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 15px; padding: 15px; background: #f8fafc; border-radius: 10px;">
+                                <span style="font-size: 2rem;">💰</span>
+                                <div>
+                                    <strong>Entry Fee</strong>
+                                    <p>${feeText}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: var(--shadow);">
+                        <h2>About Organizer</h2>
+                        <div style="display: flex; align-items: center; gap: 20px; margin-top: 20px;">
+                            <div style="width: 60px; height: 60px; background: var(--gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                                ${(event.organizer?.name || 'U').charAt(0)}
+                            </div>
+                            <div>
+                                <h3>${event.organizer?.name || 'Unknown Organizer'}</h3>
+                                <p style="color: var(--gray);">${event.organizer?.email || ''}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${event.prizes ? `
+                        <div style="background: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: var(--shadow);">
+                            <h2>Prizes</h2>
+                            <div style="margin-top: 20px;">
+                                ${event.prizes.split('\n').map(prize => `
+                                    <div style="padding: 10px 0; font-size: 1.1rem; border-bottom: 1px solid #f0f0f0;">${prize}</div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div>
+                    <div style="background: white; border-radius: 20px; padding: 30px; position: sticky; top: 100px; box-shadow: var(--shadow);">
+                        <h2>Registration</h2>
+                        <div style="margin: 20px 0;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="color: var(--gray);">Registration Progress</span>
+                                <span style="color: var(--primary); font-weight: 600;">${registeredPercent}% filled</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #f0f0f0; border-radius: 10px; overflow: hidden;">
+                                <div style="height: 100%; background: var(--gradient); width: ${registeredPercent}%;"></div>
+                            </div>
+                            <p style="text-align: center; margin-top: 10px;">
+                                <strong>${event.registeredCount || 0}</strong> of ${event.maxRegistrations || 100} registered
+                            </p>
+                        </div>
+                        
+                        <div style="font-size: 2rem; font-weight: 700; color: var(--primary); margin: 20px 0; text-align: center;">
+                            ${feeText}
+                        </div>
+                        
+                        <button class="register-big-btn" onclick="registerForEvent('${event.id}')" style="width: 100%; padding: 15px; font-size: 1.2rem; background: var(--gradient); color: white; border: none; border-radius: 10px; cursor: pointer; margin: 20px 0;">
+                            Register Now →
+                        </button>
+
+                        <div style="text-align: center; color: var(--gray); font-size: 0.9rem;">
+                            ⏳ Registration closes soon
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    
+// REPLACE your existing registerForEvent with this:
+// Update this function - it should call showRegistrationModal
+function registerForEvent(eventId) {
+    console.log('Register clicked for event:', eventId);
+    
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+        alert('Please login to register');
+        showModal('loginModal');
+        return;
+    }
+    
+    // Reset team members array
+    teamMembers = [];
+    
+    // Store current event ID globally
+    window.currentEventId = eventId;
+    
+    // Call the function that shows the team registration modal
+    showRegistrationModal(eventId);
+}
+
+
+
+    function showRegistrationModal(eventId) {
+    console.log('Showing registration modal for event:', eventId);
+    
+    const allEvents = eventStore.getAllEvents();
+    const event = allEvents.find(e => e && e.id === eventId);
+    
+    if (!event) {
+        alert('Event not found');
+        return;
+    }
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('registrationModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal with team registration form
+    const modal = document.createElement('div');
+    modal.id = 'registrationModal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Register for Event</h2>
+                <button onclick="hideModal('registrationModal')" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+            </div>
+            
+            <p style="margin: 10px 0 20px; color: var(--gray);">Fill team details below</p>
+            
+            <!-- Team Leader Section -->
+            <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; margin: 15px 0; border: 2px solid var(--primary);">
+                <h3 style="color: var(--primary); margin-bottom: 15px;">👑 Team Leader (Required)</h3>
+                
+                <div style="display: grid; gap: 15px;">
+                    <input type="text" id="leaderName" placeholder="Full Name *" required style="padding: 12px; border: 2px solid #f0f0f0; border-radius: 8px; width: 100%;">
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <input type="email" id="leaderEmail" placeholder="Email *" required style="padding: 12px; border: 2px solid #f0f0f0; border-radius: 8px;">
+                        <input type="tel" id="leaderPhone" placeholder="Phone Number *" required style="padding: 12px; border: 2px solid #f0f0f0; border-radius: 8px;">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                        <input type="text" id="leaderCollege" placeholder="College" style="padding: 12px; border: 2px solid #f0f0f0; border-radius: 8px;">
+                        <input type="text" id="leaderDepartment" placeholder="Department" style="padding: 12px; border: 2px solid #f0f0f0; border-radius: 8px;">
+                        <input type="text" id="leaderRollNo" placeholder="Roll Number" style="padding: 12px; border: 2px solid #f0f0f0; border-radius: 8px;">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Members Section -->
+            <div style="margin: 25px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3>👥 Team Members</h3>
+                    <button class="btn btn-outline" onclick="addTeamMember()" style="padding: 8px 15px;">+ Add Member</button>
+                </div>
+                
+                <div id="teamMembersContainer" style="min-height: 100px;">
+                    <p style="color: var(--gray); text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">
+                        No team members added yet. Click "Add Member" to add team members.
+                    </p>
+                </div>
+                
+                <p style="color: var(--gray); font-size: 0.85rem; margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 5px;">
+                    ℹ️ Maximum ${event.teamSize?.max || 4} members total (including leader). Team members are optional.
+                </p>
+            </div>
+            
+            <div style="background: #f0f9ff; padding: 15px; border-radius: 10px; margin: 20px 0;">
+                <p style="color: var(--primary); font-weight: 600;">Event: ${event.title}</p>
+                <p style="color: var(--gray); font-size: 0.9rem;">Date: ${event.date ? new Date(event.date).toLocaleDateString() : 'TBD'}</p>
+            </div>
+            
+            <div style="display: flex; gap: 15px;">
+                <button class="btn btn-primary" style="flex: 2; padding: 15px;" onclick="submitTeamRegistration('${event.id}')">
+                    ✅ Register Team
+                </button>
+                <button class="btn btn-outline" style="flex: 1; padding: 15px;" onclick="hideModal('registrationModal')">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    document.getElementById('registrationModal').classList.add('active');
+}
+
+
+
+
+// ===== TEAM REGISTRATION FUNCTIONS - ADD THESE =====
+let teamMembers = [];
+let maxTeamSize = 4;
+
+function addTeamMember() {
+    if (teamMembers.length >= maxTeamSize - 1) {
+        alert(`Maximum ${maxTeamSize} members allowed (including leader)`);
+        return;
+    }
+    
+    const memberId = Date.now() + Math.random();
+    teamMembers.push({ 
+        id: memberId, 
+        name: '', 
+        rollNo: '', 
+        department: '' 
+    });
+    renderTeamMembers();
+}
+
+function removeTeamMember(id) {
+    teamMembers = teamMembers.filter(m => m.id !== id);
+    renderTeamMembers();
+}
+
+function renderTeamMembers() {
+    const container = document.getElementById('teamMembersContainer');
+    if (!container) return;
+    
+    if (teamMembers.length === 0) {
+        container.innerHTML = '<p style="color: var(--gray); text-align: center; padding: 20px; background: #f8fafc; border-radius: 8px;">No team members added yet. Click "Add Member" to add team members.</p>';
+        return;
+    }
+    
+    container.innerHTML = teamMembers.map((member, index) => `
+        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--primary); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <strong style="color: var(--primary);">Member ${index + 1}</strong>
+                <button onclick="removeTeamMember(${member.id})" style="background: #fee2e2; color: #ef4444; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-weight: bold;">✕</button>
+            </div>
+            <div style="display: grid; gap: 10px;">
+                <input type="text" placeholder="Full Name" value="${member.name || ''}" 
+                    onchange="updateTeamMember(${member.id}, 'name', this.value)"
+                    style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; width: 100%;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="text" placeholder="Roll Number" value="${member.rollNo || ''}" 
+                        onchange="updateTeamMember(${member.id}, 'rollNo', this.value)"
+                        style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="text" placeholder="Department" value="${member.department || ''}" 
+                        onchange="updateTeamMember(${member.id}, 'department', this.value)"
+                        style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateTeamMember(id, field, value) {
+    const member = teamMembers.find(m => m.id === id);
+    if (member) {
+        member[field] = value;
+    }
+}
+
+
+
+function submitTeamRegistration(eventId) {
+    console.log('Submitting team registration for event:', eventId);
+    
+    const allEvents = eventStore.getAllEvents();
+    const event = allEvents.find(e => e.id === eventId);
+    
+    if (!event) {
+        alert('Event not found');
+        return;
+    }
+    
+    // Get leader details
+    const leader = {
+        name: document.getElementById('leaderName')?.value || '',
+        email: document.getElementById('leaderEmail')?.value || '',
+        phone: document.getElementById('leaderPhone')?.value || '',
+        college: document.getElementById('leaderCollege')?.value || '',
+        department: document.getElementById('leaderDepartment')?.value || '',
+        rollNo: document.getElementById('leaderRollNo')?.value || ''
+    };
+    
+    // Validate leader
+    if (!leader.name || !leader.email || !leader.phone) {
+        alert('Please fill all leader required fields (Name, Email, Phone)');
+        return;
+    }
+    
+    if (!leader.email.includes('@')) {
+        alert('Please enter a valid email address');
+        return;
+    }
+    
+    // Filter out empty team members
+    const validMembers = teamMembers.filter(m => m.name && m.name.trim() !== '');
+    
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+        alert('Please login to register');
+        return;
+    }
+    
+    // Create registration object
+    const registration = {
+        id: 'reg_' + Date.now(),
+        eventId: eventId,
+        eventTitle: event.title,
+        eventDate: event.date,
+        registrationDate: new Date().toISOString(),
+        userId: currentUser.id,
+        userName: currentUser.name,
+        userEmail: currentUser.email,
+        leader: leader,
+        teamMembers: validMembers,
+        totalMembers: 1 + validMembers.length,
+        type: validMembers.length > 0 ? 'team' : 'individual',
+        status: 'confirmed'
+    };
+    
+    console.log('Saving registration:', registration);
+    
+    // Save to user's registrations
+    const userRegKey = `registrations_${currentUser.id}`;
+    let userRegs = JSON.parse(localStorage.getItem(userRegKey) || '[]');
+    userRegs.push(registration);
+    localStorage.setItem(userRegKey, JSON.stringify(userRegs));
+    
+    // Also save to global registrations store for admin
+    if (typeof registrationStore !== 'undefined') {
+        registrationStore.addRegistration(registration);
+    }
+    
+    // Update event count
+    event.registeredCount = (event.registeredCount || 0) + 1;
+    eventStore.saveToStorage();
+    
+    alert(`✅ Registration successful! Total members: ${registration.totalMembers}`);
+    hideModal('registrationModal');
+    
+    // Reset form
+    teamMembers = [];
+    document.getElementById('leaderName').value = '';
+    document.getElementById('leaderEmail').value = '';
+    document.getElementById('leaderPhone').value = '';
+    document.getElementById('leaderCollege').value = '';
+    document.getElementById('leaderDepartment').value = '';
+    document.getElementById('leaderRollNo').value = '';
+    
+    // Reload event details to show updated count
+    loadEventDetails();
+}
+// ===== END TEAM REGISTRATION FUNCTIONS =====
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function confirmRegistration(eventId) {
+        console.log('Confirming registration for event:', eventId);
+        
+        const fullName = document.getElementById('regFullName')?.value;
+        const email = document.getElementById('regEmail')?.value;
+        
+        if (!fullName || !email) {
+            alert('Please fill in your name and email');
+            return;
+        }
+        
+        const allEvents = eventStore.getAllEvents();
+        const event = allEvents.find(e => e && e.id === eventId);
+        
+        if (!event) {
+            alert('Event not found');
+            return;
+        }
+        
+        const currentUser = getCurrentUser();
+        
+        // Create registration object with all details
+        const registration = {
+            id: 'reg_' + Date.now(),
+            eventId: event.id,
+            eventTitle: event.title,
+            eventType: event.type,
+            eventDate: event.date,
+            eventLocation: event.location,
+            organizerId: event.organizer?.id,
+            organizerName: event.organizer?.name,
+            organizerEmail: event.organizer?.email,
+            userId: currentUser.id,
+            userName: fullName,
+            userEmail: email,
+            college: document.getElementById('regCollege')?.value || '',
+            year: document.getElementById('regYear')?.value || '',
+            phone: document.getElementById('regPhone')?.value || '',
+            teamName: document.getElementById('regTeamName')?.value || '',
+            registrationDate: new Date().toISOString(),
+            status: 'confirmed'
+        };
+        
+        console.log('Registration object:', registration);
+        
+        // Save to registration store (if it exists)
+        if (typeof registrationStore !== 'undefined') {
+            registrationStore.addRegistration(registration);
+        }
+        
+        // Save to user's personal registrations
+        const userRegistrationsKey = `registrations_${currentUser.id}`;
+        let userRegistrations = JSON.parse(localStorage.getItem(userRegistrationsKey) || '[]');
+        userRegistrations.push(registration);
+        localStorage.setItem(userRegistrationsKey, JSON.stringify(userRegistrations));
+        console.log('Saved to user registrations');
+        
+        // Increment event registration count
+        event.registeredCount = (event.registeredCount || 0) + 1;
+        eventStore.saveToStorage();
+        console.log('Updated event count');
+        
+        // Send email notifications (if email service exists)
+        if (typeof emailService !== 'undefined') {
+            try {
+                // Email to admin
+                emailService.sendEmail(
+                    'admin@campusconnect.com',
+                    '📝 New Event Registration',
+                    `<p>New registration for ${event.title}</p>`
+                );
+                
+                // Email to organizer
+                if (event.organizer?.email) {
+                    emailService.sendEmail(
+                        event.organizer.email,
+                        '🎉 New Registration for Your Event',
+                        `<p>${fullName} registered for ${event.title}</p>`
+                    );
+                }
+            } catch (e) {
+                console.log('Email service error:', e);
+            }
+        }
+        
+        // Hide registration modal
+        hideModal('registrationModal');
+        
+        // Show success message
+        alert(`✅ Registration successful for ${event.title}!`);
+        
+        // Reload event details to show updated count
+        loadEventDetails();
+    }
+
+    // Modal functions
+    function hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    function showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
+
+    // Check login status
+    function checkLoginStatus() {
+        const user = getCurrentUser();
+        console.log('Current user:', user);
+        return !!user;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Event details page loaded');
+        checkAuth();
+        loadEventDetails();
+    });
+
+    // Make functions global
+    window.registerForEvent = registerForEvent;
+    window.confirmRegistration = confirmRegistration;
+    window.hideModal = hideModal;
+    window.showModal = showModal;
+</script>
+</body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event - CampusConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .form-container h1 {
+            margin-bottom: 30px;
+            text-align: center;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            color: var(--primary);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .preview-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 15px;
+            border: 2px dashed #e2e8f0;
+        }
+        
+        .preview-section h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .guidelines {
+            background: #fff7ed;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .guidelines h4 {
+            color: #f59e0b;
+            margin-bottom: 10px;
+        }
+        
+        .guidelines ul {
+            padding-left: 20px;
+            color: var(--gray);
+        }
+        
+        .guidelines li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='index.html'">
+            🚀 CampusConnect
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="events.html">Events</a>
+            <a href="organizer.html">Dashboard</a>
+            <div id="authButtons">
+                <button class="btn btn-primary" onclick="showModal('loginModal')">Sign In</button>
+                <button class="btn btn-outline" onclick="showModal('registerModal')">Join Free</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="form-container">
+        <h1>🎯 Create New Event</h1>
+        
+        <div class="guidelines">
+            <h4>📋 Before you submit:</h4>
+            <ul>
+                <li>✓ Your event will be reviewed by our team within 24-48 hours</li>
+                <li>✓ You'll receive an email notification when approved</li>
+                <li>✓ Make sure all details are accurate</li>
+                <li>✓ Add a clear description to attract more participants</li>
+            </ul>
+        </div>
+        
+        <form id="createEventForm" onsubmit="handleSubmit(event)">
+            <div class="form-group">
+                <label>Event Title *</label>
+                <input type="text" id="title" required placeholder="e.g., National Hackathon 2024" maxlength="100">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Event Type *</label>
+                    <select id="type" required>
+                        <option value="">Select type</option>
+                        <option value="hackathon">💻 Hackathon</option>
+                        <option value="workshop">🔧 Workshop</option>
+                        <option value="seminar">📚 Seminar</option>
+                        <option value="competition">🏆 Competition</option>
+                        <option value="pitching-lab">🚀 Pitching Lab</option>
+                        <option value="conference">🎤 Conference</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="category">
+                        <option value="tech">Technology</option>
+                        <option value="business">Business</option>
+                        <option value="design">Design</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Description *</label>
+                <textarea id="description" rows="5" required placeholder="Describe your event in detail..."></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date *</label>
+                    <input type="date" id="date" required min="<?php echo date('Y-m-d'); ?>">
+                </div>
+                
+                <div class="form-group">
+                    <label>Time</label>
+                    <input type="time" id="time">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Location *</label>
+                <input type="text" id="location" required placeholder="e.g., Bangalore / Online">
+            </div>
+            
+            <div class="form-group">
+                <label>Venue Details (Optional)</label>
+                <input type="text" id="venue" placeholder="Full address or meeting link">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Max Participants</label>
+                    <input type="number" id="maxParticipants" value="100" min="1" max="10000">
+                </div>
+                
+                <div class="form-group">
+                    <label>Entry Fee (₹)</label>
+                    <input type="number" id="fee" value="0" min="0">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Min Team Size</label>
+                    <input type="number" id="minTeam" value="1" min="1" max="10">
+                </div>
+                
+                <div class="form-group">
+                    <label>Max Team Size</label>
+                    <input type="number" id="maxTeam" value="4" min="1" max="20">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Prizes (Optional)</label>
+                <textarea id="prizes" rows="3" placeholder="🥇 1st Place: ₹50,000&#10;🥈 2nd Place: ₹25,000&#10;🥉 3rd Place: ₹10,000"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Schedule (Optional)</label>
+                <textarea id="schedule" rows="4" placeholder="10:00 AM - Registration&#10;11:00 AM - Opening Ceremony&#10;12:00 PM - Event Starts"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Required Skills (Optional)</label>
+                <input type="text" id="skills" placeholder="e.g., Python, JavaScript, Design">
+            </div>
+            
+            <div class="info-box">
+                ⏳ Your event will be pending approval. You'll receive an email once it's reviewed.
+            </div>
+            
+            <div class="preview-section" id="preview">
+                <h3>👀 Live Preview</h3>
+                <p>Fill the form to see preview</p>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">Submit for Approval →</button>
+        </form>
+    </div>
+
+    <!-- Login Modal (if not logged in) -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2>Login Required</h2>
+            <p>Please login as organizer to create events</p>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="window.location.href='index.html'">Go to Home</button>
+                <button class="btn btn-outline" onclick="hideModal('loginModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+   <!-- PUT THIS AT THE BOTTOM OF create-event.html, just before </body> -->
+<script src="js/data-store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/email-templates.js"></script>
+<script src="js/email-service.js"></script>
+<script>
+    // ===== ADD THIS RIGHT HERE =====
+    // Check if we're editing an event
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('id');
+    const editEventId = urlParams.get('edit');
+
+    if (editEventId) {
+        document.querySelector('h1').textContent = '✏️ Edit Event';
+        document.querySelector('.submit-btn').textContent = 'Update Event →';
+        // We'll call loadEventForEditing after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEventForEditing(editEventId);
+        });
+    }
+
+    function loadEventForEditing(eventId) {
+        const allEvents = eventStore.getAllEvents();
+        const event = allEvents.find(e => e.id === eventId);
+        
+        if (!event) {
+            alert('Event not found');
+            window.location.href = 'organizer.html';
+            return;
+        }
+        
+        const currentUser = getCurrentUser();
+        if (event.organizer.id !== currentUser.id && currentUser.role !== 'admin') {
+            alert('You can only edit your own events');
+            window.location.href = 'organizer.html';
+            return;
+        }
+        
+        // Fill form with event data
+        document.getElementById('title').value = event.title || '';
+        document.getElementById('type').value = event.type || '';
+        document.getElementById('description').value = event.description || '';
+        document.getElementById('date').value = event.date || '';
+        document.getElementById('time').value = event.time || '';
+        document.getElementById('location').value = event.location || '';
+        document.getElementById('venue').value = event.venue || '';
+        document.getElementById('maxParticipants').value = event.maxRegistrations || 100;
+        document.getElementById('fee').value = event.fee || 0;
+        document.getElementById('minTeam').value = event.teamSize?.min || 1;
+        document.getElementById('maxTeam').value = event.teamSize?.max || 4;
+        document.getElementById('prizes').value = event.prizes || '';
+        document.getElementById('schedule').value = event.schedule || '';
+        document.getElementById('skills').value = event.skills || '';
+        
+        window.editingEventId = eventId;
+    }
+    // ===== END OF NEW CODE =====
+
+    // Your existing updatePreview function continues here...
+    function updatePreview() {
+        // ... your existing code ...
+    }
+    
+    // Check if scripts loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Checking scripts...');
+        console.log('eventStore exists?', typeof eventStore !== 'undefined');
+        
+        if (typeof eventStore === 'undefined') {
+            console.error('❌ eventStore NOT FOUND!');
+            alert('Error: JavaScript files not loading. Check console.');
+        } else {
+            console.log('✅ All scripts loaded successfully');
+        }
+    });
+
+    // Live preview
+    function updatePreview() {
+        const title = document.getElementById('title')?.value || 'Event Title';
+        const type = document.getElementById('type')?.value || 'hackathon';
+        const date = document.getElementById('date')?.value || '2024-04-15';
+        const location = document.getElementById('location')?.value || 'Location';
+        const max = document.getElementById('maxParticipants')?.value || '100';
+        
+        const preview = document.getElementById('preview');
+        if (preview) {
+            preview.innerHTML = `
+                <h3>👀 Live Preview</h3>
+                <div style="background: white; padding: 20px; border-radius: 10px; margin-top: 10px;">
+                    <span class="event-type">${type.toUpperCase()}</span>
+                    <h4 style="margin: 10px 0; font-size: 1.2rem;">${title}</h4>
+                    <div style="display: flex; gap: 15px; color: var(--gray); margin: 10px 0; flex-wrap: wrap;">
+                        <span>📍 ${location}</span>
+                        <span>📅 ${date}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <p style="margin-top: 10px;">👥 0/${max} registered</p>
+                    <div style="background: #f59e0b20; color: #f59e0b; padding: 8px; border-radius: 5px; font-size: 0.9rem; margin-top: 10px;">
+                        ⏳ Pending Approval
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    // Add event listeners for preview
+    ['title', 'type', 'date', 'location', 'maxParticipants'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', updatePreview);
+        }
+    });
+
+    async function handleSubmit(event) {
+    event.preventDefault();
+    
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+        alert('Please login');
+        return;
+    }
+    
+    const formData = {
+        title: document.getElementById('title').value,
+        type: document.getElementById('type').value,
+        description: document.getElementById('description').value,
+        date: document.getElementById('date').value,
+        time: document.getElementById('time').value,
+        location: document.getElementById('location').value,
+        venue: document.getElementById('venue').value,
+        maxRegistrations: parseInt(document.getElementById('maxParticipants').value) || 100,
+        fee: parseInt(document.getElementById('fee').value) || 0,
+        teamSize: {
+            min: parseInt(document.getElementById('minTeam').value) || 1,
+            max: parseInt(document.getElementById('maxTeam').value) || 4
+        },
+        prizes: document.getElementById('prizes').value,
+        schedule: document.getElementById('schedule').value,
+        skills: document.getElementById('skills').value
+    };
+    
+    try {
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.textContent = 'Saving...';
+        submitBtn.disabled = true;
+        
+        if (window.editingEventId) {
+            // UPDATE existing event
+            const success = eventStore.updateEvent(window.editingEventId, formData);
+            if (success) {
+                alert('✅ Event updated successfully!');
+                
+                // If event was approved, it needs admin approval again
+                const event = eventStore.getEventById(window.editingEventId);
+                if (event.originalStatus === 'approved') {
+                    alert('Note: Your event will need admin approval again.');
+                }
+            }
+        } else {
+            // CREATE new event
+            formData.organizer = {
+                id: currentUser.id,
+                name: currentUser.name,
+                email: currentUser.email
+            };
+            eventStore.submitEvent(formData);
+            alert('✅ Event submitted for approval!');
+        }
+        
+        window.location.href = 'organizer.html';
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error saving event');
+    } finally {
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.textContent = window.editingEventId ? 'Update Event →' : 'Submit for Approval →';
+        submitBtn.disabled = false;
+    }
+}
+    // Modal functions
+    function showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.add('active');
+    }
+
+    function hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.remove('active');
+    }
+
+    // Check login status on page load
+    function checkLoginStatus() {
+        const currentUser = getCurrentUser();
+        console.log('Page loaded, user:', currentUser);
+        
+        if (!currentUser) {
+            showModal('loginModal');
+            return false;
+        }
+        
+        if (currentUser.role !== 'organizer' && currentUser.role !== 'admin') {
+            alert('This page is for organizers only');
+            window.location.href = 'index.html';
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        updatePreview();
+        checkLoginStatus();
+    });
+
+    // Make functions global
+    window.handleSubmit = handleSubmit;
+    window.showModal = showModal;
+    window.hideModal = hideModal;
+</script>
+</body>
+</html>

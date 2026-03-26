@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test OTP System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .status-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-left: 4px solid #6366f1;
+        }
+        
+        .status-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .label {
+            color: #64748b;
+            font-size: 14px;
+        }
+        
+        .value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .value.success {
+            color: #10b981;
+        }
+        
+        .value.error {
+            color: #ef4444;
+        }
+        
+        .test-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            border-color: #6366f1;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .message.show {
+            display: block;
+        }
+        
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .message.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+        
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e293b;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .debug-info pre {
+            margin-top: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .link-button {
+            background: none;
+            border: none;
+            color: #6366f1;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
+        }
+        
+        .link-button:hover {
+            color: #4f46e5;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Test OTP System</h1>
+        <p class="subtitle">Test your Brevo email integration</p>
+        
+        <!-- Backend Status -->
+        <div class="status-card">
+            <h3>🔌 Backend Status</h3>
+            <div class="status-item">
+                <span class="label">Server URL:</span>
+                <span class="value">http://localhost:5000</span>
+            </div>
+            <div class="status-item">
+                <span class="label">Connection:</span>
+                <span class="value" id="backendStatus">Checking...</span>
+            </div>
+        </div>
+        
+        <!-- OTP Test Section -->
+        <div class="test-section">
+            <h3>📱 Test OTP</h3>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="emailInput" placeholder="Enter your email" value="test@example.com">
+            </div>
+            <button id="sendOtpBtn" onclick="sendOTP()">Send OTP</button>
+        </div>
+        
+        <!-- Message Display -->
+        <div id="messageBox" class="message"></div>
+        
+        <!-- Debug Information -->
+        <div class="debug-info">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🐛 Debug Console</span>
+                <button class="link-button" onclick="clearDebug()">Clear</button>
+            </div>
+            <pre id="debugOutput">Ready...</pre>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="link-button" onclick="testBackend()">Test Backend</button>
+            <button class="link-button" onclick="checkEmailSettings()">Check Settings</button>
+            <button class="link-button" onclick="window.location.reload()">Refresh Page</button>
+        </div>
+        
+        <div class="footer">
+            CampusConnect OTP Test | Brevo Integration
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:5000';
+        
+        // Debug logging
+        function addDebug(message, type = 'info') {
+            const debugEl = document.getElementById('debugOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            debugEl.innerHTML = `[${timestamp}] ${message}\n` + debugEl.innerHTML;
+            if (debugEl.innerHTML.split('\n').length > 10) {
+                debugEl.innerHTML = debugEl.innerHTML.split('\n').slice(0, 10).join('\n');
+            }
+        }
+        
+        function showMessage(text, type = 'info') {
+            const msgBox = document.getElementById('messageBox');
+            msgBox.textContent = text;
+            msgBox.className = `message show ${type}`;
+            addDebug(`${type.toUpperCase()}: ${text}`, type);
+        }
+        
+        function clearDebug() {
+            document.getElementById('debugOutput').innerHTML = 'Cleared...';
+        }
+        
+        // Test backend connection
+        async function testBackend() {
+            addDebug('Testing backend connection...');
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/test`);
+                const data = await response.json();
+                addDebug(`Backend response: ${JSON.stringify(data)}`);
+                
+                document.getElementById('backendStatus').innerHTML = '<span class="value success">✅ Connected</span>';
+                showMessage('✅ Backend connected successfully!', 'success');
+                return true;
+            } catch (error) {
+                addDebug(`❌ Backend error: ${error.message}`);
+                document.getElementById('backendStatus').innerHTML = '<span class="value error">❌ Not Connected</span>';
+                showMessage(`❌ Cannot connect to backend: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        // Send OTP
+        async function sendOTP() {
+            const email = document.getElementById('emailInput').value.trim();
+            const sendBtn = document.getElementById('sendOtpBtn');
+            
+            if (!email) {
+                showMessage('Please enter an email address', 'error');
+                return;
+            }
+            
+            if (!email.includes('@') || !email.includes('.')) {
+                showMessage('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            addDebug(`Sending OTP to: ${email}`);
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/otp/request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                addDebug(`Response status: ${response.status}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                addDebug(`Response data: ${JSON.stringify(data)}`);
+                
+                if (data.success) {
+                    showMessage(`✅ OTP sent to ${email}! Check your inbox.`, 'success');
+                } else {
+                    showMessage(`❌ ${data.message || 'Failed to send OTP'}`, 'error');
+                }
+            } catch (error) {
+                addDebug(`❌ Error: ${error.message}`);
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send OTP';
+            }
+        }
+        
+        // Check email settings
+        async function checkEmailSettings() {
+            addDebug('Checking email settings...');
+            showMessage('Check browser console for SMTP settings', 'info');
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/test`);
+                const data = await response.json();
+                console.log('✅ Backend is running:', data);
+                
+                // Try to check SMTP settings (you'd need a special endpoint for this)
+                console.log('📧 Make sure your emailService.js has:');
+                console.log('   host: smtp-relay.brevo.com');
+                console.log('   port: 587');
+                console.log('   auth.user: your_brevo_email');
+                console.log('   auth.pass: your_smtp_key');
+            } catch (error) {
+                console.error('❌ Backend not running:', error);
+            }
+        }
+        
+        // Auto-test backend on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            addDebug('Page loaded, testing backend...');
+            await testBackend();
+        });
+        
+        // Test on window load
+        window.addEventListener('load', () => {
+            addDebug('Window loaded, ready for tests');
+        });
+    </script>
+</body>
+</html>

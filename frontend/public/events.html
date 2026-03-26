@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - CampusConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-width: 150px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 40px 0;
+        }
+        .page-btn {
+            padding: 10px 15px;
+            border: none;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .page-btn.active {
+            background: var(--gradient);
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: white;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar (same as index.html) -->
+   <nav class="navbar">
+    <div class="logo" onclick="window.location.href='index.html'">
+        🚀 CampusConnect
+    </div>
+    <div class="nav-links">
+        <a href="#" onclick="loadPage('index.html'); return false;">Home</a>
+        <a href="#" onclick="loadPage('events.html'); return false;">Events</a>
+        <a href="#" onclick="loadPage('internships.html'); return false;">Internships</a>
+        <a href="#" onclick="loadPage('organizer.html'); return false;">For Organizers</a>
+        <div id="authButtons">
+            <button class="btn btn-primary" onclick="showModal('loginModal')">Sign In</button>
+            <button class="btn btn-outline" onclick="showModal('registerModal')">Join Free</button>
+        </div>
+        <div id="userMenu" style="display: none;">
+            <!-- User menu will be populated by JS -->
+        </div>
+    </div>
+</nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1 class="section-title">📅 All Events</h1>
+        
+        <!-- Filters -->
+        <div class="filters">
+            <select class="filter-select" id="typeFilter">
+                <option value="">All Types</option>
+                <option value="hackathon">Hackathons</option>
+                <option value="workshop">Workshops</option>
+                <option value="seminar">Seminars</option>
+                <option value="competition">Competitions</option>
+            </select>
+            
+            <select class="filter-select" id="locationFilter">
+                <option value="">All Locations</option>
+                <option value="bangalore">Bangalore</option>
+                <option value="mumbai">Mumbai</option>
+                <option value="delhi">Delhi</option>
+                <option value="online">Online</option>
+            </select>
+            
+            <select class="filter-select" id="dateFilter">
+                <option value="">Any Date</option>
+                <option value="today">Today</option>
+                <option value="this-week">This Week</option>
+                <option value="this-month">This Month</option>
+                <option value="upcoming">Upcoming</option>
+            </select>
+            
+            <input type="text" placeholder="Search events..." class="filter-select" style="flex: 1;" id="searchInput">
+            <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+        </div>
+
+        <!-- Events Grid -->
+        <div id="eventsGrid" class="events-grid">
+            <div class="loading">Loading events...</div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+            <button class="page-btn" onclick="changePage(1)">1</button>
+            <button class="page-btn" onclick="changePage(2)">2</button>
+            <button class="page-btn" onclick="changePage(3)">3</button>
+            <button class="page-btn" onclick="changePage(4)">4</button>
+            <button class="page-btn" onclick="changePage(5)">5</button>
+        </div>
+    </div>
+
+    <!-- Footer (same as index.html) -->
+    <footer class="footer">
+        <!-- ... footer content ... -->
+    </footer>
+
+    <!-- Modals (same as index.html) -->
+    <!-- ... modals ... -->
+
+   <script src="js/data-store.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    let currentPage = 1;
+    let currentFilter = 'all';
+    let currentFilters = {};
+
+    function loadEvents() {
+        const grid = document.getElementById('eventsGrid');
+        if (!grid) return;
+        
+        grid.innerHTML = '<div class="loading" style="grid-column: 1/-1; text-align: center; padding: 50px; color: white;">Loading events...</div>';
+        
+        // Get approved events from store
+        const approvedEvents = eventStore.getApprovedEvents();
+        console.log('Approved events:', approvedEvents);
+        
+        if (approvedEvents.length === 0) {
+            grid.innerHTML = '<div style="text-align: center; padding: 50px; color: white; grid-column: 1/-1;">No events yet. Check back soon!</div>';
+            return;
+        }
+
+        displayEvents(approvedEvents);
+        updatePagination(approvedEvents.length);
+    }
+
+    function displayEvents(events) {
+        const grid = document.getElementById('eventsGrid');
+        
+        grid.innerHTML = events.map(event => `
+            <div class="event-card" onclick="window.location.href='event-details.html?id=${event.id}'">
+                <span class="event-type">${(event.type || 'event').toUpperCase()}</span>
+                <h3 class="event-title">${event.title}</h3>
+                <p class="event-description">${(event.description || '').substring(0, 120)}...</p>
+                <div class="event-meta">
+                    <span>📍 ${event.location || 'TBD'}</span>
+                    <span>📅 ${new Date(event.date).toLocaleDateString()}</span>
+                </div>
+                <div style="margin: 15px 0;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${Math.round((event.registeredCount || 0)/(event.maxRegistrations || 100)*100)}%"></div>
+                    </div>
+                </div>
+                <div class="event-footer">
+                    <span class="registered">👥 ${event.registeredCount || 0}/${event.maxRegistrations || 100}</span>
+                    <button class="register-btn" onclick="event.stopPropagation(); window.location.href='event-details.html?id=${event.id}'">
+                        View Details →
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function applyFilters() {
+        loadEvents();
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        loadEvents();
+    }
+
+    function updatePagination(totalEvents) {
+        // Simple pagination update
+        console.log('Total events:', totalEvents);
+    }
+
+    // Listen for events updates
+    window.addEventListener('eventsUpdated', function() {
+        loadEvents();
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        checkAuth();
+        loadEvents();
+    });
+
+    // Make functions global
+    window.applyFilters = applyFilters;
+    window.changePage = changePage;
+</script>
+
+
+
+<script>
+// Page navigation function
+function loadPage(pageName) {
+    window.location.href = pageName;
+}
+
+// Make sure all regular links work too
+document.addEventListener('click', function(e) {
+    // If it's a link with href that doesn't start with #
+    if (e.target.tagName === 'A' && e.target.getAttribute('href') && !e.target.getAttribute('href').startsWith('#')) {
+        e.preventDefault();
+        window.location.href = e.target.getAttribute('href');
+    }
+});
+
+// Your existing functions
+function showModal(modalId) {
+    document.getElementById(modalId).classList.add('active');
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+// Check authentication on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Data - Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .registrations-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .header-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            min-width: 200px;
+        }
+        
+        .registrations-table {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .registrations-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .registrations-table th {
+            background: var(--gradient);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .registrations-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .registrations-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .export-btn {
+            background: var(--primary);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .view-details-btn {
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .participant-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='index.html'">
+            🚀 CampusConnect Admin
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="admin-pending.html">Pending Events</a>
+            <a href="admin-registrations.html" class="active">Registrations</a>
+            <div id="adminInfo">
+                <span class="badge badge-info">Admin</span>
+                <button class="btn btn-outline" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="registrations-container">
+        <div class="header-card">
+            <h1>📊 Event Registrations Data</h1>
+            <p style="color: var(--gray); margin-top: 10px;">View and export all participant registrations</p>
+            
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalRegistrations">0</div>
+                    <p>Total Registrations</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="totalEvents">0</div>
+                    <p>Events with Registrations</p>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="uniqueParticipants">0</div>
+                    <p>Unique Participants</p>
+                </div>
+            </div>
+            
+            <div class="filter-bar">
+                <select class="filter-select" id="eventFilter" onchange="filterRegistrations()">
+                    <option value="">All Events</option>
+                </select>
+                
+                <input type="text" class="filter-select" id="searchInput" placeholder="Search by name or email..." onkeyup="filterRegistrations()" style="flex: 1;">
+                
+                <button class="export-btn" onclick="exportToCSV()">📥 Export to CSV</button>
+                <button class="btn btn-outline" onclick="exportToJSON()">📄 Export to JSON</button>
+            </div>
+        </div>
+
+        <div class="registrations-table" id="registrationsTable">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Participant</th>
+                        <th>Email</th>
+                        <th>College</th>
+                        <th>Phone</th>
+                        <th>Registration Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="registrationsBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 50px;">Loading registrations...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Participant Details Modal -->
+    <div class="modal" id="participantModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2>Participant Details</h2>
+            <div id="participantDetails"></div>
+            <div style="display: flex; gap: 15px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="sendEmailToParticipant()">Send Email</button>
+                <button class="btn btn-outline" onclick="hideModal('participantModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data-store.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        let currentRegistrations = [];
+        let filteredRegistrations = [];
+
+        function loadRegistrations() {
+            // Get all registrations from store
+            currentRegistrations = registrationStore.getAllRegistrations();
+            filteredRegistrations = [...currentRegistrations];
+            
+            updateStats();
+            populateEventFilter();
+            displayRegistrations();
+        }
+
+        function updateStats() {
+            const totalReg = currentRegistrations.length;
+            const uniqueEvents = new Set(currentRegistrations.map(r => r.eventId)).size;
+            const uniqueParticipants = new Set(currentRegistrations.map(r => r.userEmail)).size;
+            
+            document.getElementById('totalRegistrations').textContent = totalReg;
+            document.getElementById('totalEvents').textContent = uniqueEvents;
+            document.getElementById('uniqueParticipants').textContent = uniqueParticipants;
+        }
+
+        function populateEventFilter() {
+            const events = new Set(currentRegistrations.map(r => r.eventTitle));
+            const filterSelect = document.getElementById('eventFilter');
+            
+            let options = '<option value="">All Events</option>';
+            events.forEach(event => {
+                options += `<option value="${event}">${event}</option>`;
+            });
+            
+            filterSelect.innerHTML = options;
+        }
+
+        function filterRegistrations() {
+            const eventFilter = document.getElementById('eventFilter').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredRegistrations = currentRegistrations.filter(reg => {
+                const matchesEvent = !eventFilter || reg.eventTitle === eventFilter;
+                const matchesSearch = !searchTerm || 
+                    reg.userName.toLowerCase().includes(searchTerm) ||
+                    reg.userEmail.toLowerCase().includes(searchTerm) ||
+                    (reg.college && reg.college.toLowerCase().includes(searchTerm));
+                
+                return matchesEvent && matchesSearch;
+            });
+            
+            displayRegistrations();
+        }
+
+        function displayRegistrations() {
+            const tbody = document.getElementById('registrationsBody');
+            
+            if (filteredRegistrations.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 50px;">
+                            No registrations found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filteredRegistrations.map(reg => `
+                <tr>
+                    <td><strong>${reg.eventTitle}</strong><br><small>${new Date(reg.eventDate).toLocaleDateString()}</small></td>
+                    <td>${reg.userName}</td>
+                    <td>${reg.userEmail}</td>
+                    <td>${reg.college || '-'}</td>
+                    <td>${reg.phone || '-'}</td>
+                    <td>${new Date(reg.registrationDate).toLocaleString()}</td>
+                    <td>
+                        <button class="view-details-btn" onclick="showParticipantDetails('${reg.id}')">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showParticipantDetails(registrationId) {
+            const reg = currentRegistrations.find(r => r.id === registrationId);
+            if (!reg) return;
+            
+            const detailsDiv = document.getElementById('participantDetails');
+            detailsDiv.innerHTML = `
+                <div class="participant-card">
+                    <h3>${reg.userName}</h3>
+                    <p>📧 ${reg.userEmail}</p>
+                    <p>📞 ${reg.phone || 'Not provided'}</p>
+                    
+                    <div class="details-grid">
+                        <div>
+                            <strong>Event:</strong>
+                            <p>${reg.eventTitle}</p>
+                        </div>
+                        <div>
+                            <strong>Date:</strong>
+                            <p>${new Date(reg.eventDate).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            <strong>College:</strong>
+                            <p>${reg.college || 'Not provided'}</p>
+                        </div>
+                        <div>
+                            <strong>Year:</strong>
+                            <p>${reg.year || 'Not provided'}</p>
+                        </div>
+                        <div>
+                            <strong>Team:</strong>
+                            <p>${reg.teamName || 'Individual'}</p>
+                        </div>
+                        <div>
+                            <strong>Registered:</strong>
+                            <p>${new Date(reg.registrationDate).toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            showModal('participantModal');
+        }
+
+        function sendEmailToParticipant() {
+            alert('Email functionality will be connected to your email service');
+        }
+
+        function exportToCSV() {
+            let csv = 'Event,Participant Name,Email,College,Phone,Team,Registration Date\n';
+            
+            filteredRegistrations.forEach(reg => {
+                csv += `"${reg.eventTitle}","${reg.userName}","${reg.userEmail}","${reg.college || ''}","${reg.phone || ''}","${reg.teamName || 'Individual'}","${new Date(reg.registrationDate).toLocaleString()}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'registrations.csv';
+            a.click();
+        }
+
+        function exportToJSON() {
+            const data = JSON.stringify(filteredRegistrations, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'registrations.json';
+            a.click();
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            if (!currentUser || currentUser.role !== 'admin') {
+                window.location.href = 'index.html';
+                return;
+            }
+            loadRegistrations();
+        });
+
+        // Make functions global
+        window.filterRegistrations = filterRegistrations;
+        window.showParticipantDetails = showParticipantDetails;
+        window.sendEmailToParticipant = sendEmailToParticipant;
+        window.exportToCSV = exportToCSV;
+        window.exportToJSON = exportToJSON;
+        window.hideModal = hideModal;
+    </script>
+</body>
+</html>

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizer Dashboard - CampusConnect</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        
+        .welcome-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: var(--gradient);
+            opacity: 0.1;
+            border-radius: 50%;
+            transform: translate(50%, -50%);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .status-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .status-tab {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+        
+        .status-tab:hover {
+            background: var(--gradient);
+            color: white;
+        }
+        
+        .status-tab.active {
+            background: var(--gradient);
+            color: white;
+        }
+        
+        .events-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .events-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .events-table th {
+            background: #f8fafc;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .events-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .events-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .badge-pending {
+            background: #f59e0b20;
+            color: #f59e0b;
+        }
+        
+        .badge-approved {
+            background: #10b98120;
+            color: #10b981;
+        }
+        
+        .badge-rejected {
+            background: #ef444420;
+            color: #ef4444;
+        }
+        
+        .action-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 0 5px;
+        }
+        
+        .action-btn.edit {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .action-btn.view {
+            background: #f8fafc;
+            color: var(--dark);
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        .action-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+        
+        .action-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo" onclick="window.location.href='index.html'">
+            🚀 CampusConnect
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="events.html">Events</a>
+            <a href="organizer.html" class="active">Dashboard</a>
+            <div id="authButtons">
+                <button class="btn btn-primary" onclick="showModal('loginModal')">Sign In</button>
+                <button class="btn btn-outline" onclick="showModal('registerModal')">Join Free</button>
+            </div>
+            <div id="userMenu" style="display: none;">
+                <div class="dropdown">
+                    <div class="user-menu">
+                        <div class="avatar" id="userAvatar"></div>
+                        <span id="userName"></span>
+                    </div>
+                    <div class="dropdown-content">
+                        <a href="profile.html">👤 Profile</a>
+                        <a href="organizer.html">📊 Dashboard</a>
+                        <a href="admin-pending.html" id="adminLink" style="display: none;">👑 Admin</a>
+                        <a onclick="logout()">🚪 Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="welcome-card">
+            <h1>Welcome back, <span id="organizerName">Organizer</span>! 👋</h1>
+            <p style="color: var(--gray); margin-top: 10px;">Manage your events and track their performance</p>
+            
+            <div class="stats-grid" id="organizerStats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEvents">0</div>
+                    <p>Total Events</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingEvents">0</div>
+                    <p>Pending Approval</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="approvedEvents">0</div>
+                    <p>Approved</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalRegistrations">0</div>
+                    <p>Registrations</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+            <h2>Your Events</h2>
+            <button class="btn btn-primary" onclick="window.location.href='create-event.html'" style="padding: 12px 30px;">
+                + Create New Event
+            </button>
+        </div>
+
+        <div class="status-tabs">
+            <button class="status-tab active" onclick="filterEvents('all')">All</button>
+            <button class="status-tab" onclick="filterEvents('pending')">⏳ Pending</button>
+            <button class="status-tab" onclick="filterEvents('approved')">✅ Approved</button>
+            <button class="status-tab" onclick="filterEvents('rejected')">❌ Rejected</button>
+        </div>
+
+        <div class="events-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Registrations</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="eventsTableBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px;">Loading your events...</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+
+        <div class="quick-actions">
+            <div class="action-card" onclick="window.location.href='create-event.html'">
+                <div class="action-icon">📝</div>
+                <h3>Create New Event</h3>
+                <p style="color: var(--gray); margin-top: 10px;">List a new hackathon or workshop</p>
+            </div>
+            <div class="action-card" onclick="window.location.href='events.html'">
+                <div class="action-icon">👀</div>
+                <h3>View Live Events</h3>
+                <p style="color: var(--gray); margin-top: 10px;">See your approved events</p>
+            </div>
+            <div class="action-card" onclick="window.location.href='profile.html'">
+                <div class="action-icon">⚙️</div>
+                <h3>Organizer Profile</h3>
+                <p style="color: var(--gray); margin-top: 10px;">Update your organization details</p>
+                
+            </div>
+            
+    <button class="action-btn" onclick="sendUpdate('${event.id}')">📢 Update event </button>
+        </div>
+    </div>
+
+
+    <!-- Send Update Modal -->
+<!-- Send Update Modal -->
+<div class="modal" id="updateModal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2>📢 Send Update</h2>
+            <button onclick="hideModal('updateModal')" style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
+        </div>
+        
+        <p style="margin: 10px 0 20px; color: var(--gray);">This will be sent to everyone registered for this event.</p>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Subject</label>
+            <input type="text" id="updateSubject" placeholder="e.g., Schedule Change, Important Update" 
+                   style="width: 100%; padding: 12px; border: 2px solid #f0f0f0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Message</label>
+            <textarea id="updateMessage" rows="5" placeholder="Enter your update message here..." 
+                      style="width: 100%; padding: 12px; border: 2px solid #f0f0f0; border-radius: 8px; resize: vertical;"></textarea>
+        </div>
+        
+        <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="color: var(--primary); font-weight: 600;">ℹ️ Info</p>
+            <p style="color: var(--gray); font-size: 0.9rem;">This update will be visible to all registered participants. In the future, this will also send email notifications.</p>
+        </div>
+        
+        <div style="display: flex; gap: 15px;">
+            <button class="btn btn-primary" style="flex: 1;" onclick="sendUpdateToParticipants()">Send Update</button>
+            <button class="btn btn-outline" style="flex: 1;" onclick="hideModal('updateModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2>Login Required</h2>
+            <p>Please login to access organizer dashboard</p>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="window.location.href='index.html'">Go to Home</button>
+                <button class="btn btn-outline" onclick="hideModal('loginModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+   <script src="js/auth.js"></script>
+<script src="js/data-store.js"></script>
+<script>
+    // No 'let currentUser' declaration - using from auth.js
+    
+    let currentFilter = 'all';
+    let currentUpdateEventId = null;
+
+    // Debug - check if user is loaded
+    console.log('Organizer page loaded');
+    console.log('currentUser from auth:', window.currentUser);
+    console.log('getCurrentUser():', getCurrentUser());
+
+    // Make sure currentUser is set
+    if (!window.currentUser) {
+        window.currentUser = getCurrentUser();
+    }
+
+    function loadOrganizerEvents() {
+        console.log('Loading organizer events...');
+        
+        // Double-check currentUser
+        let user = window.currentUser || getCurrentUser();
+        console.log('Using user:', user);
+        
+        if (!user) {
+            console.log('No user logged in');
+            document.getElementById('eventsTableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px;">
+                        <p>Please login to view your events</p>
+                        <a href="index.html" class="btn btn-primary">Go to Login</a>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        // Get ALL events from store
+        const allEvents = eventStore.getAllEvents();
+        console.log('All events:', allEvents);
+        
+        // Filter events where organizer.id matches current user id
+        const organizerEvents = allEvents.filter(event => {
+            return event.organizer && event.organizer.id === user.id;
+        });
+        
+        console.log('Filtered organizer events:', organizerEvents);
+        
+        // Update stats
+        document.getElementById('totalEvents').textContent = organizerEvents.length;
+        document.getElementById('pendingEvents').textContent = organizerEvents.filter(e => e.status === 'pending').length;
+        document.getElementById('approvedEvents').textContent = organizerEvents.filter(e => e.status === 'approved').length;
+        
+        const totalReg = organizerEvents.reduce((sum, e) => sum + (e.registeredCount || 0), 0);
+        document.getElementById('totalRegistrations').textContent = totalReg;
+        
+        const tbody = document.getElementById('eventsTableBody');
+        
+        if (organizerEvents.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">📋</div>
+                        <h3>No events yet</h3>
+                        <p style="color: var(--gray); margin: 15px 0;">You haven't created any events.</p>
+                        <a href="create-event.html" class="btn btn-primary">Create Your First Event →</a>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = organizerEvents.map(event => {
+            const eventDate = new Date(event.date);
+            const today = new Date();
+            const daysUntil = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+            
+            let statusBadge = '';
+            let statusMessage = '';
+            let actionButtons = `<button class="action-btn view" onclick="window.location.href='event-details.html?id=${event.id}'">View</button>`;
+            
+            if (event.status === 'pending') {
+                statusBadge = '<span class="badge badge-warning">⏳ Pending Approval</span>';
+                statusMessage = '<small style="color: #f59e0b;">Under review by admin</small>';
+                actionButtons += `<button class="action-btn edit" onclick="window.location.href='create-event.html?edit=${event.id}'">Edit</button>`;
+            } else if (event.status === 'approved') {
+                statusBadge = '<span class="badge badge-success">✅ Live</span>';
+                statusMessage = '<small style="color: #10b981;">Visible to students</small>';
+                actionButtons += `<button class="action-btn" onclick="sendUpdate('${event.id}')">📢 Update</button>`;
+                actionButtons += `<button class="action-btn" onclick="window.location.href='create-event.html?edit=${event.id}'">Edit</button>`;
+            } else if (event.status === 'rejected') {
+                statusBadge = '<span class="badge badge-danger">❌ Rejected</span>';
+                statusMessage = '<small style="color: #ef4444;">' + (event.rejectionReason || 'Not approved') + '</small>';
+                actionButtons += `<button class="action-btn edit" onclick="window.location.href='create-event.html?edit=${event.id}'">Edit & Resubmit</button>`;
+            }
+            
+            return `
+                <tr>
+                    <td>
+                        <strong>${event.title}</strong><br>
+                        <small style="color: var(--gray);">${event.type || 'Event'}</small>
+                    </td>
+                    <td>
+                        ${eventDate.toLocaleDateString()}<br>
+                        <small style="color: ${daysUntil < 7 ? '#ef4444' : '#64748b'};">
+                            ${daysUntil > 0 ? daysUntil + ' days left' : 'Event passed'}
+                        </small>
+                    </td>
+                    <td>
+                        <strong>${event.registeredCount || 0}/${event.maxRegistrations || 100}</strong><br>
+                        <small style="color: var(--gray);">
+                            ${Math.round((event.registeredCount || 0)/(event.maxRegistrations || 100)*100)}% filled
+                        </small>
+                    </td>
+                    <td>
+                        ${statusBadge}<br>
+                        ${statusMessage}
+                    </td>
+                    <td>
+                        ${event.views || 0}
+                    </td>
+                    <td>
+                        ${actionButtons}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function filterEvents(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.status-tab').forEach(tab => tab.classList.remove('active'));
+        event.target.classList.add('active');
+        loadOrganizerEvents();
+    }
+
+    // ===== UPDATE FUNCTIONS =====
+    function sendUpdate(eventId) {
+        console.log('Send update clicked for event:', eventId);
+        
+        let user = window.currentUser || getCurrentUser();
+        if (!user) {
+            alert('Please login first');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        currentUpdateEventId = eventId;
+        
+        // Clear previous values
+        const subjectInput = document.getElementById('updateSubject');
+        const messageInput = document.getElementById('updateMessage');
+        if (subjectInput) subjectInput.value = '';
+        if (messageInput) messageInput.value = '';
+        
+        // Show modal
+        showModal('updateModal');
+    }
+
+    function sendUpdateToParticipants() {
+        const subject = document.getElementById('updateSubject')?.value;
+        const message = document.getElementById('updateMessage')?.value;
+        
+        if (!subject || !message) {
+            alert('Please fill both subject and message');
+            return;
+        }
+        
+        let user = window.currentUser || getCurrentUser();
+        if (!user) {
+            alert('Please login');
+            return;
+        }
+        
+        const event = eventStore.getEventById(currentUpdateEventId);
+        if (!event) {
+            alert('Event not found');
+            return;
+        }
+        
+        // Get registrations for this event
+        let allRegistrations = [];
+        
+        // Try to get from registrationStore
+        if (typeof registrationStore !== 'undefined' && registrationStore.getAllRegistrations) {
+            allRegistrations = registrationStore.getAllRegistrations();
+        } else {
+            // Search through all users' registrations
+            const allUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
+            allUsers.forEach(u => {
+                const userRegs = JSON.parse(localStorage.getItem(`registrations_${u.id}`) || '[]');
+                allRegistrations = [...allRegistrations, ...userRegs];
+            });
+        }
+        
+        const eventRegistrations = allRegistrations.filter(r => r.eventId === currentUpdateEventId);
+        
+        // Create update record
+        const update = {
+            id: 'upd_' + Date.now(),
+            eventId: currentUpdateEventId,
+            eventTitle: event.title,
+            subject: subject,
+            message: message,
+            sentAt: new Date().toISOString(),
+            sentBy: user.name || 'Organizer',
+            recipientCount: eventRegistrations.length
+        };
+        
+        // Save to localStorage
+        let eventUpdates = JSON.parse(localStorage.getItem('event_updates') || '[]');
+        eventUpdates.push(update);
+        localStorage.setItem('event_updates', JSON.stringify(eventUpdates));
+        
+        console.log('📢 Update sent:', update);
+        
+        alert(`✅ Update sent to ${eventRegistrations.length} participant(s)!`);
+        
+        hideModal('updateModal');
+    }
+
+    // ===== MODAL FUNCTIONS =====
+    function showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
+
+    function hideModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    function shareEvent(eventId) {
+        const url = window.location.origin + '/event-details.html?id=' + eventId;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Event link copied to clipboard!');
+        }).catch(() => {
+            prompt('Copy this link:', url);
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Organizer dashboard initializing...');
+        
+        // Check authentication
+        checkAuth();
+        
+        // Make sure we have currentUser
+        setTimeout(function() {
+            let user = window.currentUser || getCurrentUser();
+            console.log('Final user check:', user);
+            
+            if (!user) {
+                alert('Please login as organizer');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            if (user.role !== 'organizer' && user.role !== 'admin') {
+                alert('This page is for organizers only');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Update organizer name
+            const nameElement = document.getElementById('organizerName');
+            if (nameElement) {
+                nameElement.textContent = user.name || 'Organizer';
+            }
+            
+            // Load events
+            loadOrganizerEvents();
+        }, 100); // Small delay to ensure auth is complete
+    });
+
+    // Make functions global
+    window.filterEvents = filterEvents;
+    window.sendUpdate = sendUpdate;
+    window.sendUpdateToParticipants = sendUpdateToParticipants;
+    window.shareEvent = shareEvent;
+    window.showModal = showModal;
+    window.hideModal = hideModal;
+</script>
+</body>
+</html>
